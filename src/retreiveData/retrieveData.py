@@ -6,7 +6,9 @@ printer = pprint.PrettyPrinter()
 
 def get_most_recent_games(username):
     data = get_player_game_archives(username).json
-    url = data['archives'][-1]
+
+    #reminder to change to data['archives'][-1] to get latest game
+    url = data['archives'][0]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
     moves = last_game_played['pgn']
@@ -35,7 +37,9 @@ def get_most_recent_games(username):
 
 def getColor(username):
     data = get_player_game_archives(username).json
-    url = data['archives'][-1]
+
+    #reminder to change to data['archives'][-1] to get latest game
+    url = data['archives'][0]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
     # printer.pprint(last_game_played)
