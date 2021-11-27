@@ -111,7 +111,7 @@ async def main() -> None:
             else:
                 for i in range(depth):
                     result = await engine.play(copy_board, chess.engine.Limit(time=0.1))
-                    await explainableAI(color, engine, board, nextMove, result.move)
+                    await explainableAI(color, engine, copy_board, 0, result.move,1)
                     copy_board.push(result.move)
                     print(copy_board)
                     print(copy_board.fen())
@@ -120,10 +120,11 @@ async def main() -> None:
             no_moves = no_moves + 1
             if (color == "white" and board.turn) or (color =="black" and not board.turn):
                 result = await engine.play(board, chess.engine.Limit(time=0.1))
-                await explainableAI(color, engine, board, nextMove, result.move)
+                await explainableAI(color, engine, board, nextMove, result.move,0)
                 board.push_san(nextMove)
             else:
                 board.push_san(nextMove)
+
         print(board)
         print(board.fen())
                 # else:

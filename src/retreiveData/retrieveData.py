@@ -8,7 +8,7 @@ def get_most_recent_games(username):
     data = get_player_game_archives(username).json
 
     #reminder to change to data['archives'][-1] to get latest game
-    url = data['archives'][0]
+    url = data['archives'][-1]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
     moves = last_game_played['pgn']
@@ -39,7 +39,7 @@ def getColor(username):
     data = get_player_game_archives(username).json
 
     #reminder to change to data['archives'][-1] to get latest game
-    url = data['archives'][0]
+    url = data['archives'][-1]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
     # printer.pprint(last_game_played)
