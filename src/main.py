@@ -24,6 +24,13 @@ from explainMoves.explainMoves import *
 # screen.fill(WHITE)
 
 
+sample_game_movesets = ['e4 ', 'e5 ', 'Nf3 ', 'd6 ', 'd4 ', 'Bg4 ', 'h3 ', 'Be6 ', 
+'Nc3 ', 'f6 ', 'Be3 ', 'g5 ', 'g4 ', 'h5 ', 'gxh5 ', 'Rxh5 ', 'Nxe5 ', 'fxe5 ',
+ 'Qxh5+ ', 'Bf7 ', 'Bxg5 ', 'Be7 ', 'Bxe7 ', 'Qxe7 ', 'Qh8 ', 'Nc6 ', 'Nd5 ',
+  'Bxd5 ', 'exd5 ', 'Nxd4 ', 'Qxg8+ ', 'Qf8 ', 'Qxf8+ ', 'Kxf8 ', 'O-O-O ', 'Re8 ',
+   'c3 ', 'Nf3 ', 'Be2 ', 'e4 ', 'Bxf3 ', 'exf3 ', 'Rde1 ', 'Rxe1+ ', 'Rxe1 ', 
+   'Kf7 ', 'b4 ', 'Kf6 ', 'Re3 ']
+
 # chessboard = pygame.image.load(r'./src/chessPieces/ChessBoard.png').convert_alpha()
 # King = pygame.image.load(r'./src/chessPieces/Chess_klt60.png').convert_alpha()
 # king = pygame.image.load(r'./src/chessPieces/Chess_kdt60.png').convert_alpha()
