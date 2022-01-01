@@ -4,10 +4,11 @@ import requests
 
 printer = pprint.PrettyPrinter()
 
+
 def get_most_recent_games(username):
     data = get_player_game_archives(username).json
 
-    #reminder to change to data['archives'][-1] to get latest game
+    # reminder to change to data['archives'][-1] to get latest game
     url = data['archives'][-1]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
@@ -21,7 +22,7 @@ def get_most_recent_games(username):
         if moves[i] == ' ':
             moveList.append(string)
             string = ""
-        string =  moves[i] + string
+        string = moves[i] + string
     # print(moveList[::-1])
     newList = []
     for i in moveList[::-1]:
@@ -35,10 +36,11 @@ def get_most_recent_games(username):
     # print(moveList[::-1][0])
     return newList
 
+
 def getColor(username):
     data = get_player_game_archives(username).json
 
-    #reminder to change to data['archives'][-1] to get latest game
+    # reminder to change to data['archives'][-1] to get latest game
     url = data['archives'][-1]
     games = requests.get(url).json()
     last_game_played = games['games'][-1]
@@ -49,4 +51,3 @@ def getColor(username):
         return "black"
     else:
         return "white"
-
