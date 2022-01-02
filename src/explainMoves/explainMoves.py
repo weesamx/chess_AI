@@ -20,7 +20,6 @@ def TextGeneration(board, uci_user_moves, color):
     # print(end_square)
     copy_board = board.copy()
     bool_color = copy_board.turn
-
     before_base_baord = chess.BaseBoard(copy_board.board_fen())
     copy_board.push_uci(uci_user_moves)
     after_base_baord = chess.BaseBoard(copy_board.board_fen())
@@ -60,34 +59,15 @@ def TextGeneration(board, uci_user_moves, color):
                 print(color.capitalize(), moved_piece_name, "at", end_square, "defends",
                       color.capitalize(), end_piece_name, " at",  chess.square_name(end_squares))
 
-    # start_attack_square = before_base_baord.attacks(chess.parse_square(start_square))
-    # #Check for user's hanging pieces
-    # for start_squares in start_attack_square:
-    #     start_piece = before_base_baord.piece_at(chess.parse_square(chess.square_name(start_squares)))
-    #     if start_piece != None:
-    #         start_piece_type = start_piece.piece_type
-    #         start_piece_name = chess.piece_name(start_piece_type).capitalize()
-    #         #Defends a square
-    #         if start_piece.color == bool_color and start_piece_type != chess.KING:
-    #             enemy_attackers = before_base_baord.attackers(not bool_color, chess.parse_square(chess.square_name(start_squares)))
-    #             # print(list(enemy_attackers))
-    #             # print(start_piece_name)
-    #             if list(enemy_attackers):
-    #                 #originally defended piece at start square might be hanging after moving
-    #                 #has an attacker
-    #                 user_attackers = after_base_baord.attackers(bool_color, chess.parse_square(chess.square_name(start_squares)))
-    #                 if not list(user_attackers):
-    #                     #no one defending piece that was originaly defended
-    #                     print(color.capitalize() , start_piece_name , "at" , chess.square_name(start_squares), "is hanging")
-    #                 # for i in user_attackers:
-    #                 #     print(chess.square_name(i))
-    #                 # print(list(user_attackers))
-
     # check if any piece in board is hanging
-    piece_type_list = [chess.PAWN, chess.KNIGHT, chess.BISHOP, chess.QUEEN]
-    for piece_type in piece_type_list:
-        pieces_square_set = after_base_baord.pieces(piece_type, bool_color)
-        for square in list(pieces_square_set):
+    hanging_piece_list = [chess.PAWN, chess.KNIGHT,
+                          chess.BISHOP, chess.ROOK, chess.QUEEN]
+    user_hanging_list = []
+    # enemy_hanging_list = []
+    for piece_type in hanging_piece_list:
+        user_pieces_square_set = after_base_baord.pieces(
+            piece_type, bool_color)
+        for square in user_pieces_square_set:
             piece = after_base_baord.piece_at(square)
             if piece != None:
                 piece_name = chess.piece_name(piece.piece_type).capitalize()
@@ -96,10 +76,63 @@ def TextGeneration(board, uci_user_moves, color):
                 user_attackers = after_base_baord.attackers(bool_color, square)
                 # print(chess.square_name(square))
                 if list(enemy_attackers) and not list(user_attackers):
+                    user_hanging_list.append(square)
                     print(color.capitalize(), piece_name, "at",
                           chess.square_name(square), "is hanging")
 
-    # Absolute pins (pinning a piece against opponents king)
+    # Pins
+    pins_list = [chess.BISHOP, chess.ROOK, chess.QUEEN]
+    if moved_piece_type in pins_list:
+        for square in end_attack_square:
+            piece = after_base_baord.piece_at(
+                chess.parse_square(chess.square_name(square)))
+            if piece != None and piece.color != bool_color:
+                square_set_ray = chess.SquareSet.ray(
+                    square, chess.parse_square(end_square))
+                piece_type = piece.piece_type
+                piece_name = chess.piece_name(piece_type).capitalize()
+                for ray_square in square_set_ray:
+                    ray_piece = after_base_baord.piece_at(
+                        chess.parse_square(chess.square_name(ray_square)))
+                    piece_count = 0
+                    if ray_piece != None and ray_piece.color != bool_color:
+                        squares_between_piece_and_user_piece = chess.SquareSet.between(
+                            ray_square, chess.parse_square(end_square))
+                        ray_piece_type = ray_piece.piece_type
+                        ray_piece_name = chess.piece_name(
+                            ray_piece_type).capitalize()
+                        # print(squares_between_piece_and_user_piece)
+                        # print("-----")
+                        if list(squares_between_piece_and_user_piece):
+                            for between_square in squares_between_piece_and_user_piece:
+                                between_piece = after_base_baord.piece_at(
+                                    chess.parse_square(chess.square_name(between_square)))
+                                if between_piece != None and between_piece.color != bool_color:
+                                    between_piece_type = between_piece.piece_type
+                                    between_piece_name = chess.piece_name(
+                                        between_piece_type).capitalize()
+                                    piece_count = piece_count + 1
+                            if piece_count == 1:
+                                if square not in user_hanging_list:
+                                    if ray_piece.piece_type == chess.KING:
+                                        # Absolute pin
+                                        print(color.capitalize(), moved_piece_name, "at", chess.square_name(
+                                            square), "absolute pins", opponent_color.capitalize(), between_piece_name, "at", chess.square_name(between_square))
+                                    else:
+                                        is_ray_square_attacked = after_base_baord.is_attacked_by(
+                                            not bool_color, ray_square)
+                                        if not is_ray_square_attacked and between_piece_type != chess.KING:
+                                            print(color.capitalize(), moved_piece_name, "at", chess.square_name(square), "pins", opponent_color.capitalize(
+                                            ), between_piece_name, "at", chess.square_name(between_square), "with", opponent_color.capitalize(), ray_piece_name, "at", chess.square_name(ray_square))
+                                        else:
+                                            knight_bishop = [
+                                                chess.KNIGHT, chess.BISHOP]
+                                            if ray_piece.piece_type in knight_bishop and piece_type in knight_bishop:
+                                                print(color.capitalize(), moved_piece_name, "at", chess.square_name(square), "pins", opponent_color.capitalize(
+                                                ), between_piece_name, "at", chess.square_name(between_square), "with", opponent_color.capitalize(), ray_piece_name, "at", chess.square_name(ray_square))
+                                            elif int(ray_piece.piece_type) >= int(moved_piece_type):
+                                                print(color.capitalize(), moved_piece_name, "at", chess.square_name(square), "pins", opponent_color.capitalize(
+                                                ), between_piece_name, "at", chess.square_name(between_square), "with", opponent_color.capitalize(), ray_piece_name, "at", chess.square_name(ray_square))
 
     # Discovered attacks
 
@@ -148,7 +181,6 @@ async def explainableAI(color, engine, board, user_moves, generated_moves, simul
         mean_score = analyseScores(moves_scores_dictionary)
 
         if best_score.isnumeric() and user_move_score.isnumeric():
-
             # evaluate if usermove is good or bad
             if int(best_score) - int(user_move_score) > 100:
                 # bad move
