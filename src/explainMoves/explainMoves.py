@@ -1,7 +1,4 @@
-from asyncio.windows_events import NULL
 import chess
-import asyncio
-
 
 def analyseScores(move_dictionary):
     total = 0
