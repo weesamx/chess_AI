@@ -13,6 +13,94 @@ def analyseScores(move_dictionary):
     return mean
 
 
+def BadTextGeneration(board, uci_user_moves, color):
+    start_square = uci_user_moves[:2]
+    end_square = uci_user_moves[-2:]
+    # print(start_square)
+    # print(end_square)
+    copy_board = board.copy()
+    bool_color = copy_board.turn
+    before_base_baord = chess.BaseBoard(copy_board.board_fen())
+    copy_board.push_uci(uci_user_moves)
+    after_base_baord = chess.BaseBoard(copy_board.board_fen())
+    moved_piece_type = after_base_baord.piece_type_at(
+        chess.parse_square(end_square))
+    moved_piece_name = chess.piece_name(moved_piece_type).capitalize()
+    if color == "white":
+        opponent_color = "black"
+    else:
+        opponent_color = "white"
+    # check if any piece in board is hanging
+    hanging_piece_list = [chess.PAWN, chess.KNIGHT,
+                          chess.BISHOP, chess.ROOK, chess.QUEEN]
+    user_hanging_list = []
+    # enemy_hanging_list = []
+    for piece_type in hanging_piece_list:
+        user_pieces_square_set = after_base_baord.pieces(
+            piece_type, bool_color)
+        for square in user_pieces_square_set:
+            piece = after_base_baord.piece_at(square)
+            if piece != None:
+                piece_name = chess.piece_name(piece.piece_type).capitalize()
+                enemy_attackers = after_base_baord.attackers(
+                    not bool_color, square)
+                user_attackers = after_base_baord.attackers(bool_color, square)
+                # print(chess.square_name(square))
+                if list(enemy_attackers) and not list(user_attackers):
+                    user_hanging_list.append(square)
+                    print(color.capitalize(), piece_name, "at",
+                          chess.square_name(square), "is hanging")
+
+
+
+def GoodTextGeneration(board, uci_user_moves, color):
+    start_square = uci_user_moves[:2]
+    end_square = uci_user_moves[-2:]
+    # print(start_square)
+    # print(end_square)
+    copy_board = board.copy()
+    bool_color = copy_board.turn
+    before_base_baord = chess.BaseBoard(copy_board.board_fen())
+    copy_board.push_uci(uci_user_moves)
+    after_base_baord = chess.BaseBoard(copy_board.board_fen())
+    moved_piece_type = after_base_baord.piece_type_at(
+        chess.parse_square(end_square))
+    moved_piece_name = chess.piece_name(moved_piece_type).capitalize()
+    if color == "white":
+        opponent_color = "black"
+    else:
+        opponent_color = "white"
+
+    # Control Centre Text
+    centre_squares = ["e4", "e5", "d4", "d5"]
+    if end_square in centre_squares:
+        print(color.capitalize(), moved_piece_name,
+              "controls centre tile", end_square)
+
+    # Attacks a square
+    end_attack_square = after_base_baord.attacks(
+        chess.parse_square(end_square))
+    for end_squares in end_attack_square:
+        end_piece = after_base_baord.piece_at(
+            chess.parse_square(chess.square_name(end_squares)))
+        if end_piece != None:
+            end_piece_type = end_piece.piece_type
+            end_piece_name = chess.piece_name(end_piece_type).capitalize()
+            if end_piece.color != bool_color:
+                # print(bool_color)
+                # print(piece.color)
+                # print(chess.square_name(squares))
+                print(color.capitalize(), moved_piece_name, "at", end_square, "threatens",
+                      opponent_color.capitalize(), end_piece_name, "at", chess.square_name(end_squares))
+            # Defends a square
+            if end_piece.color == bool_color and end_piece_type != chess.KING:
+                # Defend iff piece is attacked
+                # Strengthen iff piece is not attacked
+                print(color.capitalize(), moved_piece_name, "at", end_square, "defends",
+                      color.capitalize(), end_piece_name, " at",  chess.square_name(end_squares))
+
+
+
 def TextGeneration(board, uci_user_moves, color):
     start_square = uci_user_moves[:2]
     end_square = uci_user_moves[-2:]
@@ -139,8 +227,52 @@ def TextGeneration(board, uci_user_moves, color):
     # Forks
 
     # Pawn stacking / doubled pawn (bad)
+async def TradingText(board, uci_user_moves, color,engine):
+    start_square = uci_user_moves[:2]
+    end_square = uci_user_moves[-2:]
+    # print(start_square)
+    # print(end_square)
+    copy_board = board.copy()
+    bool_color = copy_board.turn
+    before_base_baord = chess.BaseBoard(copy_board.board_fen())
+    copy_board.push_uci(uci_user_moves)
+    after_base_baord = chess.BaseBoard(copy_board.board_fen())
+    moved_piece_type = after_base_baord.piece_type_at(
+        chess.parse_square(end_square))
+    moved_piece_name = chess.piece_name(moved_piece_type).capitalize()
+    if color == "white":
+        opponent_color = "black"
+    else:
+        opponent_color = "white"
+    piece = before_base_baord.piece_at(
+        chess.parse_square(end_square))
+    
+    takenByUser = []
+    takenByEnemy = []
+    if(piece != None):
+        #piece is taken by move
+        takenByUser.append(piece)
+        while True:
+            result = await engine.play(copy_board, chess.engine.Limit(time=0.1))
+            copy_board.push(result.move)
+            uci_user_move = copy_board.pop()
+            base_board = chess.BaseBoard(copy_board.board_fen())
+            end_square_move = str(uci_user_move)[-2:]
+            if(base_board.piece_at(chess.parse_square(end_square_move)) != None):
+                print("takes")
+                print(base_board.piece_at(chess.parse_square(end_square_move)))
+                if(copy_board.turn):
+                    takenByUser.append(base_board.piece_at(chess.parse_square(end_square_move)))
+                else:
+                    takenByEnemy.append(base_board.piece_at(chess.parse_square(end_square_move)))       
+            else:
+                break
+            
+            copy_board.push(result.move)
 
-
+    print(takenByUser)
+    print(takenByEnemy)
+    
 async def explainableAI(color, engine, board, user_moves, generated_moves, simulation):
     print("user", user_moves)
     print("generated", generated_moves)
@@ -178,7 +310,7 @@ async def explainableAI(color, engine, board, user_moves, generated_moves, simul
         print("Best move score", best_score)
         print("User move score", user_move_score,
               "User move: ", str(uci_user_moves))
-        mean_score = analyseScores(moves_scores_dictionary)
+        # mean_score = analyseScores(moves_scores_dictionary)
 
         if best_score.isnumeric() and user_move_score.isnumeric():
             # evaluate if usermove is good or bad
@@ -189,3 +321,6 @@ async def explainableAI(color, engine, board, user_moves, generated_moves, simul
                 # good move
                 pass
             TextGeneration(board, str(uci_user_moves), color)
+            await TradingText(board, str(uci_user_moves),color,engine)
+
+            print("Best Move Explanation")
