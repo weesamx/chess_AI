@@ -16,12 +16,10 @@ from explainMoves.explainMoves import *
 #         board.push(result.move)
 #     await engine.quit()
 pygame.init()
-WHITE = (255, 255, 255)
-width = 480
+width = 1280
 height = 480
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Chess Engine")
-screen.fill(WHITE)
 
 
 sample_game_movesets = ['e4 ', 'e5 ', 'Nf3 ', 'd6 ', 'd4 ', 'Bg4 ', 'h3 ', 'Be6 ',
@@ -92,7 +90,10 @@ def show(FEN, board):
         elif fen in ('K', 'k', 'Q', 'q', 'R', 'r', 'N', 'n', 'B', 'b', 'P', 'p'):
             draw(fen, col*60, rank*60, board)
             rank = rank + 1
-    pygame.display.update()
+        if col == 7 and rank == 8:
+            break
+
+
 
 
 username = "weesam7"
@@ -164,13 +165,14 @@ color = getColor(username)
 
 
 async def main() -> None:
-    screen = pygame.display.set_mode((480, 480))
-    pygame.display.set_caption("Chess Engine")
+    # screen = pygame.display.set_mode((width, height))
+    # pygame.display.set_caption("Chess Engine")
     transport, engine = await chess.engine.popen_uci(r"./src/stockfish_14_win_x64_avx2/stockfish_14_x64_avx2.exe")
     board = chess.Board()
     no_moves = 0
-
+    wordList = []
     show(board.fen(),board)
+    print(board.fen())
     while matchMoves:
         ev = pygame.event.get()
         for event in ev:
@@ -179,11 +181,25 @@ async def main() -> None:
                 no_moves = no_moves + 1
                 if (color == "white" and board.turn) or (color == "black" and not board.turn):
                     result = await engine.play(board, chess.engine.Limit(time=0.1))
-                    await explainableAI(color, engine, board, nextMove, result.move, 0)
+                    wordList = await explainableAI(color, engine, board, nextMove, result.move, 0)
                     board.push_san(nextMove)
                 else:
                     board.push_san(nextMove)
+            screen.fill((220,220,220))
+
+            myfont = pygame.font.SysFont("monospace", 15)
+
+            # render text
+            # label = myfont.render("Some text!", 1, (0,0,0))
+            # screen.blit(label, (100, 100))
+
+
             show(board.fen(),board)
+            for i in range(len(wordList)):
+                label = myfont.render(wordList[i], 1, (0,0,0))
+                screen.blit(label, (500, i* 50))
+            pygame.display.update()
+
             # print(board)
             # print(board.fen())
         # else:
