@@ -185,6 +185,9 @@ async def main() -> None:
                     board.push_san(nextMove)
                 else:
                     board.push_san(nextMove)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    print(board.fen())
             screen.fill((220,220,220))
 
             myfont = pygame.font.SysFont("monospace", 15)
