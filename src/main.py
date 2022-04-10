@@ -30,6 +30,7 @@ sample_game_movesets = ['e4 ', 'e5 ', 'Nf3 ', 'd6 ', 'd4 ', 'Bg4 ', 'h3 ', 'Be6 
                         'Kf7 ', 'b4 ', 'Kf6 ', 'Re3 ']
 
 chessboard = pygame.image.load(r'./src/chessPieces/ChessBoard.png').convert_alpha()
+chessboard = pygame.transform.scale(chessboard,(480,480))
 King = pygame.image.load(r'./src/chessPieces/Chess_klt60.png').convert_alpha()
 king = pygame.image.load(r'./src/chessPieces/Chess_kdt60.png').convert_alpha()
 Knight = pygame.image.load(r'./src/chessPieces/Chess_nlt60.png').convert_alpha()
@@ -95,12 +96,18 @@ def show(FEN, board):
 
 
 
+username = "sam72281905"
 
 username = "weesam7"
 matchMoves = get_most_recent_games(username)
 print(matchMoves)
 color = getColor(username)
-
+matchMoves = sample_game_movesets
+color = "white"
+if color == 'white':
+    opp_color = 'black'
+else:
+    opp_color = 'white'
 
 # async def main() -> None:
 #     # screen = pygame.display.set_mode((480, 480))
@@ -173,21 +180,31 @@ async def main() -> None:
     wordList = []
     show(board.fen(),board)
     print(board.fen())
-    while matchMoves:
+    while no_moves != len(matchMoves):
         ev = pygame.event.get()
         for event in ev:
             if event.type == MOUSEBUTTONDOWN:
-                nextMove = matchMoves.pop(0).strip()
+                # nextMove = matchMoves.pop(0).strip()
+                nextMove = matchMoves[no_moves].strip()
                 no_moves = no_moves + 1
+
+
                 if (color == "white" and board.turn) or (color == "black" and not board.turn):
                     result = await engine.play(board, chess.engine.Limit(time=0.1))
                     wordList = await explainableAI(color, engine, board, nextMove, result.move, 0)
                     board.push_san(nextMove)
                 else:
+                    result = await engine.play(board, chess.engine.Limit(time=0.1))
+                    wordList = await explainableAI(opp_color, engine, board, nextMove, result.move, 0)
                     board.push_san(nextMove)
+
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_f:
                     print(board.fen())
+                if event.key == pygame.K_b:
+                    board.pop()
+                    no_moves = no_moves - 1
             screen.fill((220,220,220))
 
             myfont = pygame.font.SysFont("monospace", 15)
@@ -200,7 +217,7 @@ async def main() -> None:
             show(board.fen(),board)
             for i in range(len(wordList)):
                 label = myfont.render(wordList[i], 1, (0,0,0))
-                screen.blit(label, (500, i* 50))
+                screen.blit(label, (500, i* 25))
             pygame.display.update()
 
             # print(board)

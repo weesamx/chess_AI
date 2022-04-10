@@ -265,9 +265,10 @@ async def TradingText(board, uci_user_moves, color,engine):
     takenByEnemy = []
     listofMove = []
     listofBoard = []
+    listofWords = []
     if(piece != None):
         #piece is taken by move
-        listofMove.append(uci_user_moves)
+        # listofMove.append(uci_user_moves)
         takenByUser.append(piece)
         listofBoard.append(copy_board.copy())
         while True:
@@ -294,43 +295,39 @@ async def TradingText(board, uci_user_moves, color,engine):
                 listofBoard.append(copy_board)
                 copy_board.push(result.move)
                 break
-    if len(takenByUser) == 1 and len(takenByEnemy) == 0:
-        #enemy piece was hanging and no trades were given
-
-        # print(color.capitalize(), moved_piece_name , "captures" , opponent_color.capitalize() ,chess.piece_name(piece.piece_type) , "for free")
-
-
-        # for i in range(1,len(listofMove)):
-        #     previous_move = listofBoard[i].pop()
-        #     if(i%2 == 0):
-        #         WordList = TextGeneration(listofBoard[i],str(listofMove[i]),color)
-        #     else:
-        #         WordList = TextGeneration(listofBoard[i],str(listofMove[i]),opponent_color)
-
-
-        # previous_move = listofBoard[0].pop()
-        # print(listofBoard[0])
-        # print(str(listofMove[0]))
-        # TextGeneration(listofBoard[0],str(listofMove[0]),color)
-        pass
+    takenByUserPieceName = []
+    takenByEnemyPieceName = []
     for i in range(len(takenByUser)):
+        takenByUserPieceName.append(chess.piece_name(takenByUser[i]).capitalize())
         if takenByUser[i] == 2:
             takenByUser[i] == 3
     for i in range(len(takenByEnemy)):
+        takenByEnemyPieceName.append(chess.piece_name(takenByEnemy[i]).capitalize())
         if takenByEnemy[i] == 2:
             takenByEnemy[i] == 3
-    if(sum(takenByUser) > sum(takenByEnemy)):
-        #good trade
-        pass
-    elif(sum(takenByUser) < sum(takenByEnemy)):
-        #bad trade
-        pass
+    if(sum(takenByEnemy) == 0 and sum(takenByUser) == 0):
+        return listofWords
     else:
-        #equal trade
-        pass
-    print(takenByUser)
-    print(takenByEnemy)
-    print(listofMove)
+        if(sum(takenByUser) > sum(takenByEnemy)):
+            #good trade
+            listofWords.append("A good trade")
+        elif(sum(takenByUser) < sum(takenByEnemy)):
+            #bad trade
+            listofWords.append("A bad trade")
+        else:
+            #equal trade
+            listofWords.append("An equal trade")
+            pass
+        listofWords.append("You capture pieces of ")
+        listofWords.append(' '.join(takenByUserPieceName))
+        listofWords.append("Enemy captures pieces of ")
+        listofWords.append(' '.join(takenByEnemyPieceName))
+        print(takenByUser)
+        print(takenByEnemy)
+        print(listofMove)
+        listofWords.append("By following the best moves possible for both sides")
+        listofWords.append(' '.join(listofMove))
+    return listofWords
     
 async def explainableAI(color, engine, board, user_moves, generated_moves, simulation):
     print("user", user_moves)
@@ -354,14 +351,14 @@ async def explainableAI(color, engine, board, user_moves, generated_moves, simul
         copy_board = board.copy()
         copy_board.push(el)
         info = await engine.analyse(copy_board, chess.engine.Limit(nodes = 10000))
-        if color == "white":
+        # if color == "white":
             # print(str(el) + ": " +  str(info["score"].white().score()))
-            moves_scores_dictionary[str(el)] = str(
-                info["score"].white().score())
-        else:
-            # print(str(el) + ": " +  str(info["score"].black().score()))
-            moves_scores_dictionary[str(el)] = str(
-                info["score"].black().score())
+        moves_scores_dictionary[str(el)] = str(
+            info["score"].white().score())
+        # else:
+        #     # print(str(el) + ": " +  str(info["score"].black().score()))
+        #     moves_scores_dictionary[str(el)] = str(
+        #         info["score"].black().score())
 
     print(moves_scores_dictionary)
     if(str(uci_user_moves) in moves_scores_dictionary):
@@ -371,20 +368,36 @@ async def explainableAI(color, engine, board, user_moves, generated_moves, simul
         print("User move score", user_move_score,
               "User move: ", str(uci_user_moves))
         # mean_score = analyseScores(moves_scores_dictionary)
-        print("before before")
         if best_score.lstrip('-').isnumeric() and user_move_score.lstrip('-').isnumeric():
             # evaluate if usermove is good or bad
+            wordList.append("Board CentiPawn Score")
+            wordList.append(user_move_score)
             if int(best_score) - int(user_move_score) > 100:
                 # bad move
-                pass
+                wordList.append("Move is a bad move")
+                wordList = wordList + TextGeneration(board, str(uci_user_moves), color)
+                tradingList = await TradingText(board, str(uci_user_moves),color,engine)
+                if(len(tradingList) != 0):
+                    wordList.append("----------")
+                    wordList = wordList + tradingList
+    
+                print("Best Move Explanation")
+                wordList.append("Best Move (" + str(uci_generated_moves) +  ") Explanation")
+                wordList = wordList + TextGeneration(board, str(uci_generated_moves),color)
             else:
                 # good move
-                pass
-            print("before")
-            wordList = wordList + TextGeneration(board, str(uci_user_moves), color)
-            print("after")
-            await TradingText(board, str(uci_user_moves),color,engine)
+                wordList.append("Move is a good move")
+                wordList = wordList + TextGeneration(board, str(uci_user_moves), color)
+                tradingList = await TradingText(board, str(uci_user_moves),color,engine)
+                if(len(tradingList) != 0):
+                    wordList.append("----------")
+                    wordList = wordList + tradingList
+            # print("before")
+            # wordList = wordList + TextGeneration(board, str(uci_user_moves), color)
+            # print("after")
+            # await TradingText(board, str(uci_user_moves),color,engine)
 
-            print("Best Move Explanation")
-        print("after after")
+            # print("Best Move Explanation")
+            # wordList.append("Best Move (" + str(uci_generated_moves) +  ") Explanation")
+            # wordList = wordList + TextGeneration(board, str(uci_generated_moves),color)
     return wordList
